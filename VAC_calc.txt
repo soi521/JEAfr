@@ -1,0 +1,58 @@
+
+#Vegetation-Atmosphere Coupling (VAC) index calculation for Fig. 1
+
+ncrename -O -v "T-FPAR",tfpar VAC_index_final.nc VAC_index_renamed.nc
+
+#Choose a fairly high weighting number because this is an integer field and it'll round everything
+ncap2 -O -s 'where(tfpar==1) tfpar=100' VAC_index_renamed.nc VAC_mean_AorB.nc
+ncap2 -O -s 'where(tfpar==3) tfpar=100' VAC_mean_AorB.nc VAC_mean_AorB.nc
+ncap2 -O -s 'where(tfpar==2) tfpar=200' VAC_mean_AorB.nc VAC_mean_AorB.nc
+ncap2 -O -s 'where(tfpar==4) tfpar=200' VAC_mean_AorB.nc VAC_mean_AorB.nc
+
+#I need the first condition here because missing values are NOT ignored and are set to -1; the other maps any 'transitional' values also to zero.
+ncap2 -O -s 'where(tfpar>=0 && tfpar<100) tfpar=0' VAC_mean_AorB.nc VAC_mean_AorB.nc
+
+#Have to change missing values to fillvalues so that ncwa will average properly (i.e. ignore them)
+ncrename -a .missing_value,_FillValue VAC_mean_AorB.nc
+
+#OPTION 1: Straight average of all time points
+ncwa -O -v tfpar -a time VAC_mean_AorB.nc VAC_mean_annual_AorB.nc
+
+#OPTION 2: Pick out MAM records of each year ...
+ncea -d time,1982.25,1982.49 VAC_mean_AorB.nc t1982.nc
+ncea -d time,1983.25,1983.49 VAC_mean_AorB.nc t1983.nc
+ncea -d time,1984.25,1984.49 VAC_mean_AorB.nc t1984.nc
+ncea -d time,1985.25,1985.49 VAC_mean_AorB.nc t1985.nc
+ncea -d time,1986.25,1986.49 VAC_mean_AorB.nc t1986.nc
+ncea -d time,1987.25,1987.49 VAC_mean_AorB.nc t1987.nc
+ncea -d time,1988.25,1988.49 VAC_mean_AorB.nc t1988.nc
+ncea -d time,1989.25,1989.49 VAC_mean_AorB.nc t1989.nc
+ncea -d time,1990.25,1990.49 VAC_mean_AorB.nc t1990.nc
+ncea -d time,1991.25,1991.49 VAC_mean_AorB.nc t1991.nc
+ncea -d time,1992.25,1992.49 VAC_mean_AorB.nc t1992.nc
+ncea -d time,1993.25,1993.49 VAC_mean_AorB.nc t1993.nc
+ncea -d time,1994.25,1994.49 VAC_mean_AorB.nc t1994.nc
+ncea -d time,1995.25,1995.49 VAC_mean_AorB.nc t1995.nc
+ncea -d time,1996.25,1996.49 VAC_mean_AorB.nc t1996.nc
+ncea -d time,1997.25,1997.49 VAC_mean_AorB.nc t1997.nc
+ncea -d time,1998.25,1998.49 VAC_mean_AorB.nc t1998.nc
+ncea -d time,1999.25,1999.49 VAC_mean_AorB.nc t1999.nc
+ncea -d time,2000.25,2000.49 VAC_mean_AorB.nc t2000.nc
+ncea -d time,2001.25,2001.49 VAC_mean_AorB.nc t2001.nc
+ncea -d time,2002.25,2002.49 VAC_mean_AorB.nc t2002.nc
+ncea -d time,2003.25,2003.49 VAC_mean_AorB.nc t2003.nc
+ncea -d time,2004.25,2004.49 VAC_mean_AorB.nc t2004.nc
+ncea -d time,2005.25,2005.49 VAC_mean_AorB.nc t2005.nc
+ncea -d time,2006.25,2006.49 VAC_mean_AorB.nc t2006.nc
+ncea -d time,2007.25,2007.49 VAC_mean_AorB.nc t2007.nc
+ncea -d time,2008.25,2008.49 VAC_mean_AorB.nc t2008.nc
+ncea -d time,2009.25,2009.49 VAC_mean_AorB.nc t2009.nc
+ncea -d time,2010.25,2010.49 VAC_mean_AorB.nc t2010.nc
+ncea -d time,2011.25,2011.49 VAC_mean_AorB.nc t2011.nc
+#... merge them all and then take the average (a bit odd: year comes through as being a dimension only, not a variable (?), and also just the numbers 1-30 not years 1982-2011; also the time values which are half-months starting at March come through as values starting "1982." instead of "0." as I intended (values are 1982.25, 1982.29166666667, 1982.33333333333, 1982.375, 1982.41666666667, 1982.45833333333 for any year) - these are correctable but will leave them for now because the values seem to be right)
+ncecat -u record t????.nc VAC_mean_AorB_merged.nc
+ncks -O --fix_rec_dmn record VAC_mean_AorB_merged.nc VAC_mean_AorB_merged.nc
+ncrename -O -d record,year VAC_mean_AorB_merged.nc VAC_mean_AorB_merged.nc
+
+ncwa -O -v tfpar -a time VAC_mean_AorB_merged.nc VAC_mean_AorB_merged.nc
+ncwa -O -v tfpar -a year VAC_mean_AorB_merged.nc VAC_mean_mam_AorB.nc
